@@ -5,6 +5,7 @@ import { gameAtomFamily, joinableGameIds } from "../state";
 import Decimal from "decimal.js";
 import { TextButton } from "../components/Button/TextButton";
 import { useNavigate } from "react-router";
+import { useGameWallet } from "../hooks/game/wallet/useGameWallet";
 
 export const JoinGame = () => {
   const joinable = useRecoilValue(joinableGameIds);
@@ -29,6 +30,7 @@ export const JoinGame = () => {
 
 const JoinableGameRow = ({ id }: { id: string }) => {
   const game = useRecoilValue(gameAtomFamily(id));
+  const { gameWallet } = useGameWallet();
   const navigate = useNavigate();
   const betsize = new Decimal(game?.betSize.toNumber() ?? 0)
     .div(10 ** 9)
@@ -42,12 +44,19 @@ const JoinableGameRow = ({ id }: { id: string }) => {
     >
       <span>{id.slice(0, 10)}...</span>
       <span>{betsize} SOL bet size</span>
-      <button
-        onClick={() => navigate(`/game/${id}`)}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Join Game
-      </button>
+      {!gameWallet ? (
+        ""
+      ) : (
+        <button
+          onClick={() => navigate(`/game/${id}`)}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          {(game.challenger && game.challenger.equals(gameWallet.publicKey)) ||
+          game.host.equals(gameWallet.publicKey)
+            ? "Continue"
+            : "Join Game"}
+        </button>
+      )}
     </div>
   );
 };

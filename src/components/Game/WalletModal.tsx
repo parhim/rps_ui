@@ -25,36 +25,59 @@ export const WalletModal = () => {
   const onFund = useFund();
   const withdraw = useWithdraw();
 
+  const handleFund = () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error("Please enter a valid funding amount.");
+      return;
+    }
+    onFund(amount);
+  };
+
+  const handleImportSecret = () => {
+    try {
+      const sk = Uint8Array.from(Buffer.from(customSecret, "base64"));
+      const kp = Keypair.fromSecretKey(sk);
+      setWallet({
+        publicKey: kp.publicKey,
+        secretKey: customSecret,
+      });
+    } catch (error) {
+      toast.error("Invalid secret");
+    }
+  };
+
   return (
     <SimpleModal isOpen={walletOpen} onClose={() => setWalletOpen(false)}>
-      <div className="flex  justify-center pt-8 w-full flex-wrap">
+      <div className="p-6 space-y-6 max-w-lg mx-auto bg-background-darkPanelSurface rounded-lg shadow-md">
         {wallet ? (
-          <div className=" max-w-[80vw]">
-            <p className=" text-xs">
+          <div>
+            <h3 className="text-lg font-semibold text-center">Game Wallet</h3>
+            <p className="text-sm text-gray-500 text-center mb-4">
               {wallet.publicKey?.toString().slice(0, 35)}...
             </p>
-            <div className="flex flex-row justify-between items-center text-sm">
+            <div className="flex justify-center mb-4">
               <Button
                 variant="outline"
                 onClick={() =>
                   navigator.clipboard.writeText(wallet.publicKey.toString())
                 }
+                className="mr-2"
               >
-                Copy public key
+                Copy Public Key
               </Button>
-
               <TextButton
                 onClick={() => navigator.clipboard.writeText(wallet.secretKey)}
               >
-                Copy secret key seed
+                Copy Secret Key
               </TextButton>
             </div>
-
-            <p>
-              game wallet balance:{" "}
-              {new Decimal(balance).div(10 ** 9).toString()} SOL
+            <p className="text-center">
+              Game Wallet Balance:{" "}
+              <span className="font-semibold">
+                {new Decimal(balance).div(10 ** 9).toString()} SOL
+              </span>
             </p>
-            <div className="flex flex-row justify-between">
+            <div className="flex justify-center space-x-4 mt-4">
               <TextButton onClick={refreshBalance}>Refresh</TextButton>
               <TextButton
                 onClick={async () => {
@@ -67,46 +90,39 @@ export const WalletModal = () => {
             </div>
           </div>
         ) : (
-          <p>wallet not created</p>
+          <p className="text-center text-gray-500">Wallet not created</p>
         )}
-        <div>
-          <div className="flex flex-col justify-center ">
-            <label>Funding amount (SOL)</label>
-            <input
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-              }}
-              className="bg-slate-300 text-text rounded-md m-4 p-2"
-              type="number"
-            />
-            <TextButton onClick={() => onFund(amount)}>
-              Fund game wallet
-            </TextButton>
-          </div>
-        </div>
-        <div className=" h-14" />
-        <div className="flex flex-row justify-between items-center">
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Funding Amount (SOL)
+          </label>
           <input
-            className="bg-slate-300 text-text rounded-md m-4 p-2"
+            value={amount}
+            onChange={(e) => {
+              setAmount(e.target.value);
+            }}
+            className="block w-full  border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+            type="number"
+            placeholder="Enter amount"
+          />
+          <TextButton className="w-full" onClick={handleFund}>
+            Fund Game Wallet
+          </TextButton>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Import from Secret
+          </label>
+          <input
+            className="block w-full  border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
             value={customSecret}
             onChange={(e) => setCustomSecret(e.target.value)}
-          />{" "}
-          <Button
-            onClick={() => {
-              try {
-                const sk = Uint8Array.from(Buffer.from(customSecret, "base64"));
-                const kp = Keypair.fromSecretKey(sk);
-                setWallet({
-                  publicKey: kp.publicKey,
-                  secretKey: customSecret,
-                });
-              } catch (error) {
-                toast.error("invalid secret");
-              }
-            }}
-          >
-            import from secret
+            placeholder="Enter secret key"
+          />
+          <Button className="w-full" onClick={handleImportSecret}>
+            Import
           </Button>
         </div>
       </div>

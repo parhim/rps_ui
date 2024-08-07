@@ -15,7 +15,7 @@ export const GameResult = () => {
 
   const playerWins = useMemo(() => {
     if (!game) return false;
-    if (game.hostChoice === game.challengerChoice) return true;
+    if (game.hostChoice === game.challengerChoice) return false;
     return (
       (isHost &&
         game.hostChoice === Choice.Rock &&
@@ -48,30 +48,30 @@ export const GameResult = () => {
 
   const resultMessage = () => {
     if (game.hostChoice === game.challengerChoice) {
-      return "It's a draw!";
+      return "It's a draw! 🤝";
     } else {
-      return playerWins ? "You win!" : "You lose!";
+      return playerWins ? "You win! 🎉" : "You lose! 😞";
     }
   };
   if (!game.challengerChoice || !game.hostChoice) return null;
 
   return (
     <div className="flex justify-center items-center h-60">
-      <div
-        className={`p-5 rounded-lg shadow-lg bg-background-darkPanel  max-w-sm w-full mx-auto text-center ${
-          playerWins ? "" : ""
-        }`}
-      >
+      <div className="p-5 rounded-lg shadow-lg bg-background-darkPanelSurface max-w-sm w-full mx-auto text-center text-white">
         <h3 className="text-xl font-semibold mb-2">Game Result</h3>
-        <p className="text-lg">{resultMessage()}</p>
+        <p className="text-lg mb-4">{resultMessage()}</p>
         <div className="mt-4">
           <p>
             Your choice:{" "}
-            {choiceToString(isHost ? game.hostChoice : game.challengerChoice)}
+            <span className="font-bold">
+              {choiceToString(isHost ? game.hostChoice : game.challengerChoice)}
+            </span>{" "}
           </p>
           <p>
             Opponent's choice:{" "}
-            {choiceToString(isHost ? game.challengerChoice : game.hostChoice)}
+            <span className="font-bold">
+              {choiceToString(isHost ? game.challengerChoice : game.hostChoice)}
+            </span>{" "}
           </p>
         </div>
       </div>

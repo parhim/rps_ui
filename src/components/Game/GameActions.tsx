@@ -31,6 +31,7 @@ export const GameActions = () => {
   const collect = useCollectWinnings();
   const reveal = useRevealChoice();
   const updateChoiceUi = useUpdateChoice();
+
   useEffect(() => {
     if (
       (!game?.hostCommitment && isHost) ||
@@ -50,49 +51,76 @@ export const GameActions = () => {
     })();
   }, [game, isRevealing, reveal]);
 
-  if (!game) return <></>;
+  if (!game) return null;
 
   return (
-    <div className="flex flex-col flex-1">
-      <p>{isHost ? "youre the host" : "you joined the game"}</p>
-      {isHost && !!game.challenger && <p>Oponent has joined the game</p>}
+    <div className="flex flex-col flex-1 space-y-4 p-4 bg-background-darkPanelSurface rounded-lg shadow-lg text-white">
+      <p className="text-center">
+        {isHost ? "You're the host" : "You joined the game"}
+      </p>
+      {isHost && !!game.challenger && (
+        <p className="text-center text-green-400">
+          Opponent has joined the game 🎉
+        </p>
+      )}
       {((isHost && !!game.challengerCommitment) ||
-        (!isHost && !!game.hostCommitment)) && <p>Oponent made their choice</p>}
+        (!isHost && !!game.hostCommitment)) && (
+        <p className="text-center text-yellow-400">
+          Opponent made their choice 🤔
+        </p>
+      )}
       <GameResult />
       {[GameState.Active, GameState.Waiting].includes(game.gameState) && (
-        <div className="flex flex-row justify-between items-center space-x-2">
+        <div className="flex justify-center space-x-4">
           <Button
-            variant={currentChoice === Choice.Rock ? "filled" : "outline"}
             onClick={() => commit(Choice.Rock)}
+            className={`w-16 h-16 ${
+              currentChoice === Choice.Rock ? "bg-stone-600" : ""
+            }`}
           >
-            <p className=" text-4xl">🪨</p>
+            <p className="text-4xl">🪨</p>
           </Button>
           <Button
-            variant={currentChoice === Choice.Paper ? "filled" : "outline"}
             onClick={() => commit(Choice.Paper)}
+            className={`w-16 h-16 ${
+              currentChoice === Choice.Paper ? "bg-stone-600" : " "
+            }`}
           >
-            <p className=" text-4xl">📄</p>
+            <p className="text-4xl">📄</p>
           </Button>
           <Button
-            variant={currentChoice === Choice.Scissors ? "filled" : "outline"}
             onClick={() => commit(Choice.Scissors)}
+            className={`w-16 h-16 ${
+              currentChoice === Choice.Scissors ? "bg-stone-600 " : ""
+            }`}
           >
-            <p className=" text-4xl">✂️</p>
+            <p className="text-4xl">✂️</p>
           </Button>
         </div>
       )}
       {game.gameState === GameState.Ready && (
-        <Button onClick={async () => reveal()}>Reveal choice</Button>
+        <Button
+          onClick={async () => reveal()}
+          className="w-full mt-4 bg-blue-500 hover:bg-blue-700"
+        >
+          Reveal Choice
+        </Button>
       )}
-      {/* todo here that should also make sure that youre winner or just made a choice */}
       {game.gameState === GameState.Completed &&
         canCollect(game, wallet?.publicKey ?? PublicKey.default, slot) && (
-          <Button onClick={collect}>Collect</Button>
+          <Button
+            onClick={collect}
+            className="w-full mt-2 bg-green-500 hover:bg-green-700"
+          >
+            Collect Winnings 🏆
+          </Button>
         )}
       {isHost && game.gameState !== GameState.Completed && (
-        <div>
-          <p>End game and reclaim rent</p>
-          <Button onClick={end}>End game</Button>
+        <div className="text-center mt-4">
+          <p className="mb-4">End game and reclaim rent</p>
+          <Button onClick={end} className="w-full bg-red-500 hover:bg-red-700">
+            End Game
+          </Button>
         </div>
       )}
     </div>
