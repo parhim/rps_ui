@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useGameProgram } from "./useGameProgram";
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import toast from "react-hot-toast";
 import { sha256 } from "js-sha256";
 import useSharedTxLogic from "../useSendTxCommon";
@@ -12,19 +11,16 @@ import {
 import { useRecoilValue } from "recoil";
 import {
   choiceAtomFamily,
+  gameAtomFamily,
   joinedGameAtom,
   nonceSeed,
   selectPriorityFeeIx,
 } from "../../state";
 import { useLoadGame } from "./useLoadGame";
+import { useGameWallet } from "./wallet/useGameWallet";
+import { Choice } from "./useCommitChoice";
 
-export enum Choice {
-  Rock = 1,
-  Paper = 2,
-  Scissors = 3,
-}
-
-export function hashChoiceAndNonce(choice: number, nonce: Uint8Array): Buffer {
+export function hashChoiceAndNonce(choice: Choice, nonce: Uint8Array): Buffer {
   const data = Buffer.concat([Buffer.from([choice]), Buffer.from(nonce)]);
   const hash = sha256.create();
   hash.update(data);
@@ -41,18 +37,26 @@ export function createNonce(seed: number): Uint8Array {
 export const useRevealChoice = () => {
   const program = useGameProgram();
   const gameKey = useRecoilValue(joinedGameAtom);
-  const wallet = useAnchorWallet();
+  const { gameWallet: wallet } = useGameWallet();
   const { sendTx } = useSharedTxLogic();
   const load = useLoadGame();
   const seed = useRecoilValue(nonceSeed(gameKey));
   const priorityIx = useRecoilValue(selectPriorityFeeIx);
   const choice = useRecoilValue(choiceAtomFamily(gameKey));
+  const game = useRecoilValue(gameAtomFamily(gameKey));
 
   return useCallback(async () => {
     if (!seed) return toast.error("no seed");
+    if (!game) return toast.error("Game not found");
     if (!wallet) return toast.error("no wallet connected");
     const nonce = createNonce(seed);
-    if (!choice) return toast.error("no choice");
+    if (!choice || !game.challenger) return;
+    if (
+      (wallet.publicKey.equals(game.host) && !!game.hostChoice) ||
+      (wallet.publicKey.equals(game.challenger) && !!game.challengerChoice)
+    ) {
+      return;
+    }
     const tx = await program.methods
       .revealChoice(choice, Array.from(nonce))
       .accounts({
@@ -77,11 +81,12 @@ export const useRevealChoice = () => {
         })
       );
     }
-    await sendTx(tx, [], program.idl, "Revealing choice");
+    await sendTx(tx, [], program.idl, "Revealing choice", {}, true);
 
     await load(gameKey);
   }, [
     choice,
+    game,
     gameKey,
     load,
     priorityIx,

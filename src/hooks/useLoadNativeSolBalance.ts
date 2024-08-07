@@ -1,7 +1,8 @@
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { useConnection } from "@solana/wallet-adapter-react";
 import { useCallback, useEffect } from "react";
 import { useSetRecoilState } from "recoil";
 import { nativeSolBalanceAtom } from "../state";
+import { useGameWallet } from "./game/wallet/useGameWallet";
 
 export const useLoadNativeSolBalance = () => {
   const loadSolBalance = useLoadNativeSolBalanceFunc();
@@ -11,7 +12,7 @@ export const useLoadNativeSolBalance = () => {
 };
 
 export const useLoadNativeSolBalanceFunc = () => {
-  const wallet = useAnchorWallet();
+  const { gameWallet: wallet } = useGameWallet();
   const { connection } = useConnection();
   const setSolBalance = useSetRecoilState(nativeSolBalanceAtom);
 
@@ -20,6 +21,7 @@ export const useLoadNativeSolBalanceFunc = () => {
       return;
     }
     const balance = await connection.getBalance(wallet.publicKey, "confirmed");
+
     setSolBalance(balance);
   }, [connection, setSolBalance, wallet]);
 };

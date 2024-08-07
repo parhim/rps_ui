@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useGameProgram } from "./useGameProgram";
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import toast from "react-hot-toast";
 import { sha256 } from "js-sha256";
 import useSharedTxLogic from "../useSendTxCommon";
@@ -9,10 +8,11 @@ import {
   getComputeUnitsForTransaction,
   COMPUTE_UNIT_BUFFER,
 } from "../../utils/getComputeLimit";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { joinedGameAtom, nonceSeed, selectPriorityFeeIx } from "../../state";
 import { useLoadGame } from "./useLoadGame";
 import { useUpdateChoice } from "../../state/game/transactions";
+import { useGameWallet } from "./wallet/useGameWallet";
 
 export enum Choice {
   Rock = 1,
@@ -37,20 +37,20 @@ export function createNonce(seed: number): Uint8Array {
 export const useCommitChoice = () => {
   const program = useGameProgram();
   const gameKey = useRecoilValue(joinedGameAtom);
-  const wallet = useAnchorWallet();
+  const { gameWallet: wallet } = useGameWallet();
   const { sendTx } = useSharedTxLogic();
-
-  const seed = useRecoilValue(nonceSeed(gameKey));
+  const [seed, setSeed] = useRecoilState(nonceSeed(gameKey));
   const priorityIx = useRecoilValue(selectPriorityFeeIx);
   const updateChoice = useUpdateChoice();
   const load = useLoadGame();
+
   return useCallback(
     async (choice: Choice) => {
       if (!seed) return;
       if (!wallet) return toast.error("no wallet connected");
-      toast.success("updating choice");
-      updateChoice(gameKey, choice);
-      const nonce = createNonce(seed);
+      const newSeed = Math.floor(Math.random() * 100);
+      setSeed(newSeed);
+      const nonce = createNonce(newSeed);
       const commitment = hashChoiceAndNonce(choice, nonce);
       const tx = await program.methods
         .commitChoice(Array.from(commitment))
@@ -76,9 +76,9 @@ export const useCommitChoice = () => {
           })
         );
       }
-      await sendTx(tx, [], program.idl, "Encrypting choice");
-
+      await sendTx(tx, [], program.idl, "Encrypting choice", {}, true);
       await load(gameKey);
+      updateChoice(gameKey, choice);
     },
     [
       gameKey,
@@ -89,6 +89,7 @@ export const useCommitChoice = () => {
       program.provider.connection,
       seed,
       sendTx,
+      setSeed,
       updateChoice,
       wallet,
     ]

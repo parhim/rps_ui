@@ -24,6 +24,16 @@ export const settingsOpenAtom = atom<boolean>({
   default: false,
 });
 
+export const walletOpenAtom = atom<boolean>({
+  key: "walletOpenAtom",
+  default: false,
+});
+
+export const chainDetailsOpenAtom = atom<boolean>({
+  key: "chainDetailsOpenAtom",
+  default: false,
+});
+
 export const confettiAtom = atom<boolean>({
   key: "confettiAtom",
   default: false,

@@ -40,7 +40,7 @@ export const Button = ({
 const buttonClassNames = (variant: ButtonVariant) => {
   switch (variant) {
     case "outline":
-      return "bg-background-container border-text text-text";
+      return " bg-none border-white text-white";
     case "filled":
       return "bg-background-darkPanel text-text-button text-white";
     case "simple":

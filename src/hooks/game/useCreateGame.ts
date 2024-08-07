@@ -13,11 +13,14 @@ import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import useSharedTxLogic from "../useSendTxCommon";
 import { RPS_IDL } from "../../utils/program/idl";
 import { useUpdateSeed } from "../../state/game/transactions";
+import { useGameWallet } from "./wallet/useGameWallet";
+import Decimal from "decimal.js";
 
 export const useCreateGame = () => {
   const program = useGameProgram();
   const priorityIx = useRecoilValue(selectPriorityFeeIx);
   const wallet = useAnchorWallet();
+  const { gameWallet, kp } = useGameWallet();
   const setJoined = useSetRecoilState(joinedGameAtom);
   const { sendTx } = useSharedTxLogic();
   const setSeed = useUpdateSeed();
@@ -25,14 +28,18 @@ export const useCreateGame = () => {
   return useCallback(
     async (betSize: string) => {
       const gameKeypair = Keypair.generate();
-      const lamports = Number(betSize) ?? 0;
+      const lamports = new Decimal(betSize)
+        .mul(10 ** 9)
+        .floor()
+        .toNumber();
       if (!wallet) return toast.error("No wallet connected");
+      if (!gameWallet || !kp) return toast.error("No game wallet found");
       if (!lamports) return toast.error("Please provide a bet size");
       const BET_SIZE = new BN(lamports);
       const tx = await program.methods
         .createGame(BET_SIZE)
         .accounts({
-          host: wallet.publicKey,
+          host: gameWallet.publicKey,
           game: gameKeypair.publicKey,
         })
         .transaction();
@@ -40,7 +47,7 @@ export const useCreateGame = () => {
       const computeUnits = await getComputeUnitsForTransaction(
         program.provider.connection,
         tx,
-        wallet.publicKey
+        gameWallet.publicKey
       );
       if (priorityIx) {
         tx.instructions.unshift(priorityIx);
@@ -53,8 +60,16 @@ export const useCreateGame = () => {
           })
         );
       }
-      await sendTx(tx, [gameKeypair], RPS_IDL, "Creating game");
-      toast.success(gameKeypair.publicKey.toString());
+
+      await sendTx(
+        tx,
+        [gameKeypair],
+        RPS_IDL,
+        "Creating game",
+        { skipPreflight: false },
+        true
+      );
+
       setJoined(gameKeypair.publicKey.toString());
       setSeed(
         gameKeypair.publicKey.toString(),
@@ -63,6 +78,8 @@ export const useCreateGame = () => {
       return gameKeypair.publicKey;
     },
     [
+      gameWallet,
+      kp,
       priorityIx,
       program.methods,
       program.provider.connection,

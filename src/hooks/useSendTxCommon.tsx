@@ -20,6 +20,7 @@ import {
   MAINNET_BROADCAST_URLS,
 } from "../utils/constants";
 import { wait } from "../utils/tx-utils";
+import { useGameWallet } from "./game/wallet/useGameWallet";
 
 export async function promiseAllInOrder<T>(
   it: (() => Promise<T>)[]
@@ -33,6 +34,7 @@ export async function promiseAllInOrder<T>(
 
 const useSharedTxLogic = () => {
   const wallet = useAnchorWallet();
+  const { gameWallet } = useGameWallet();
   const { connection } = useConnection();
   const { addToast, errorByHash, changeStatus, timeoutByHash } = useTxToast();
   const [network] = useDevnetState();
@@ -47,11 +49,23 @@ const useSharedTxLogic = () => {
       descriptions?: string[],
       idl?: Idl,
       tokenAccounts?: PublicKey[],
+      usingGameWallet?: boolean,
       options?: ConfirmOptions
     ) => {
       if (!wallet) throw new Error("wallet not connected");
+      if (usingGameWallet && !gameWallet) throw new Error("no game wallet");
       const blockhash = await connection.getLatestBlockhash();
-      const txnsSigned = await wallet.signAllTransactions(transactions);
+
+      let txnsSigned = [];
+      if (usingGameWallet) {
+        if (!gameWallet) throw Error(" no game wallet");
+        txnsSigned = await gameWallet.signAllTransactions(transactions);
+      } else {
+        txnsSigned = await wallet.signAllTransactions(transactions);
+      }
+      console.log({ txnsSigned });
+
+      if (!txnsSigned) throw new Error("signing problem");
       const signatures = txnsSigned.reduce((prev, curr) => {
         const signature = curr.signatures[0];
         if ("signature" in signature) {
@@ -91,7 +105,7 @@ const useSharedTxLogic = () => {
               blockhash,
               options ?? {
                 commitment: "confirmed",
-                skipPreflight: true,
+                skipPreflight: false,
                 maxRetries: 5,
               }
             );
@@ -163,12 +177,13 @@ const useSharedTxLogic = () => {
     },
     [
       wallet,
+      gameWallet,
       connection,
       addToast,
       changeStatus,
       broadCastUrls,
-      errorByHash,
       timeoutByHash,
+      errorByHash,
     ]
   );
 
@@ -178,14 +193,19 @@ const useSharedTxLogic = () => {
       signers: Signer[] = [],
       idl?: Idl,
       description?: string,
-      options?: ConfirmOptions
+      options?: ConfirmOptions,
+      usingGameWallet?: boolean
     ) => {
       if (!wallet) throw new Error("wallet not connected");
+      if (usingGameWallet && !gameWallet)
+        throw new Error("game wallet not connected");
       const recentBlockhash = (await connection.getLatestBlockhash("confirmed"))
         .blockhash;
       if (tx instanceof Transaction) {
         tx.recentBlockhash = recentBlockhash;
-        tx.feePayer = wallet.publicKey;
+        tx.feePayer = usingGameWallet
+          ? gameWallet?.publicKey
+          : wallet.publicKey;
         if (signers.length) {
           tx.partialSign(...signers);
         }
@@ -200,11 +220,12 @@ const useSharedTxLogic = () => {
         description ? [description] : [],
         idl,
         undefined,
+        usingGameWallet,
         options
       );
       return txId;
     },
-    [wallet, connection, sendMultipleTransactions]
+    [wallet, gameWallet, connection, sendMultipleTransactions]
   );
 
   return { sendTx, sendMultipleTransactions };

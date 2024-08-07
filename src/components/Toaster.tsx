@@ -93,8 +93,8 @@ export const TransactionToastWindow = () => {
   if (!toastOpen || !toastList.length) return null;
   return (
     <SimpleCard
-      className=" fixed bottom-10 xl:bottom-16 md:left-4 xl:left-24 min-w-80 min-h-40 z-50 bg-background-input "
-      contentClassName="bg-background-panel"
+      className=" fixed bottom-10 xl:bottom-16 md:left-4 xl:left-24 min-w-80 min-h-40 z-50 bg-background-darkPanel "
+      contentClassName="bg-background-darkPanel"
       onHover={setToastHovered}
     >
       <div className="w-full justify-between items-center flex fex-row">

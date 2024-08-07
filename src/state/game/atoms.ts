@@ -6,6 +6,15 @@ import { Choice } from "../../hooks/game/useCommitChoice";
 
 const { persistAtom } = recoilPersist();
 
+export const keypairAtom = atom<{
+  publicKey: PublicKey;
+  secretKey: string;
+} | null>({
+  key: "keypairAtom",
+  default: null,
+  effects: [persistAtom],
+});
+
 export const joinedGameAtom = atom<string>({
   key: "joinedGameAtom",
   default: "",
@@ -25,11 +34,20 @@ export const choiceAtomFamily = atomFamily<Choice | null, string>({
   effects: [persistAtom],
 });
 
+export const joinableGameIds = atom<string[]>({
+  key: "joinableGameIds",
+  default: [],
+});
+
 export const loadedGames = atom<string[]>({
   key: "loadedGames",
   default: [],
 });
 
+export const currentSlotAtom = atom<number>({
+  key: "currentSlotAtom",
+  default: 0,
+});
 export const gameAtomFamily = atomFamily<GameAccount | null, string>({
   key: "gameAtomFamily",
   default: null,
@@ -44,6 +62,7 @@ export type GameAccount = {
   challengerChoice?: number;
   betSize: BN;
   gameState: GameState;
+  commitmentDeadline?: BN;
 };
 
 export enum GameState {

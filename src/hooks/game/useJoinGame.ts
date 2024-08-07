@@ -12,15 +12,15 @@ import {
   getComputeUnitsForTransaction,
   COMPUTE_UNIT_BUFFER,
 } from "../../utils/getComputeLimit";
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import useSharedTxLogic from "../useSendTxCommon";
 import { useUpdateSeed } from "../../state/game/transactions";
 import { useLoadGame } from "./useLoadGame";
+import { useGameWallet } from "./wallet/useGameWallet";
 
 export const useJoinGame = (gameKey: string) => {
   const program = useGameProgram();
   const priorityIx = useRecoilValue(selectPriorityFeeIx);
-  const wallet = useAnchorWallet();
+  const { gameWallet: wallet } = useGameWallet();
   const [game, setGame] = useRecoilState(gameAtomFamily(gameKey));
   const setJoined = useSetRecoilState(joinedGameAtom);
   const { sendTx } = useSharedTxLogic();
@@ -52,7 +52,7 @@ export const useJoinGame = (gameKey: string) => {
         })
       );
     }
-    await sendTx(tx, [], program.idl, "Joining game");
+    await sendTx(tx, [], program.idl, "Joining game", {}, true);
 
     const updated = await load(gameKey);
     if (updated?.challenger && updated.challenger.equals(wallet.publicKey)) {

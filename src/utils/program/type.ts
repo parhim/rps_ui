@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/rock_paper_scissors.json`.
  */
 export type RockPaperScissors = {
-  address: "36tKoNCFHpYzBjwjUqQ3gFL8aJ5tZfH6PF6gyGSNMJMn";
+  address: "HLxxaaUG6x7hXKxdw9p9JCiCSgqArf5EJyTbrWN9S41n";
   metadata: {
     name: "rockPaperScissors";
     version: "0.1.0";
@@ -305,6 +305,12 @@ export type RockPaperScissors = {
               defined: {
                 name: "gameState";
               };
+            };
+          },
+          {
+            name: "commitmentDeadline";
+            type: {
+              option: "u64";
             };
           }
         ];

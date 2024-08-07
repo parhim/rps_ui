@@ -2,7 +2,7 @@ import { web3 } from "@coral-xyz/anchor";
 import { Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
 
 /** 10% buffer on CU calculation */
-export const COMPUTE_UNIT_BUFFER = 1.08;
+export const COMPUTE_UNIT_BUFFER = 1.1;
 
 export const getComputeUnitsForTransaction = async (
   connection: Connection,

@@ -1,28 +1,30 @@
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 import { useGameProgram } from "./useGameProgram";
-import { ComputeBudgetProgram } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  sendAndConfirmTransaction,
+} from "@solana/web3.js";
 import { joinedGameAtom, selectPriorityFeeIx } from "../../state";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
   getComputeUnitsForTransaction,
   COMPUTE_UNIT_BUFFER,
 } from "../../utils/getComputeLimit";
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import useSharedTxLogic from "../useSendTxCommon";
-import { RPS_IDL } from "../../utils/program/idl";
 import { useUpdateSeed } from "../../state/game/transactions";
+import { useGameWallet } from "./wallet/useGameWallet";
+import { useConnection } from "@solana/wallet-adapter-react";
 
 export const useEndGame = () => {
   const program = useGameProgram();
   const priorityIx = useRecoilValue(selectPriorityFeeIx);
-  const wallet = useAnchorWallet();
+  const { gameWallet: wallet, kp } = useGameWallet();
   const [joined, setJoined] = useRecoilState(joinedGameAtom);
-  const { sendTx } = useSharedTxLogic();
+  const { connection } = useConnection();
   const setSeed = useUpdateSeed();
 
   return useCallback(async () => {
-    if (!wallet) {
+    if (!wallet || !kp) {
       toast.error("No wallet connected");
       return;
     }
@@ -33,6 +35,7 @@ export const useEndGame = () => {
         host: wallet.publicKey,
         game: joined,
       })
+      .signers([kp])
       .transaction();
 
     const computeUnits = await getComputeUnitsForTransaction(
@@ -51,15 +54,19 @@ export const useEndGame = () => {
         })
       );
     }
-    await sendTx(tx, [], RPS_IDL, "Ending game");
+    const signature = await sendAndConfirmTransaction(connection, tx, [kp], {
+      skipPreflight: false,
+    });
+    toast.success(signature.toString());
     setSeed(joined, null);
     setJoined("");
   }, [
+    connection,
     joined,
+    kp,
     priorityIx,
     program.methods,
     program.provider.connection,
-    sendTx,
     setJoined,
     setSeed,
     wallet,

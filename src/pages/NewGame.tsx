@@ -16,7 +16,7 @@ export const NewGame = () => {
   return (
     <div className="flex-1 flex flex-col justify-center items-center space-y-4">
       <div className="flex flex-row justify-between items-center space-x-3">
-        <label>Bet size in lamports</label>
+        <label>Bet size in sol</label>
         <input
           value={amount}
           onChange={(e) => {

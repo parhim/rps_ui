@@ -5,7 +5,7 @@ type Mutable<T> = {
 // NOTE: when updating the IDL, account names must be adjusted to camelCase for proper typing.
 
 const _IDL = {
-  address: "36tKoNCFHpYzBjwjUqQ3gFL8aJ5tZfH6PF6gyGSNMJMn",
+  address: "HLxxaaUG6x7hXKxdw9p9JCiCSgqArf5EJyTbrWN9S41n",
   metadata: {
     name: "rock_paper_scissors",
     version: "0.1.0",
@@ -305,6 +305,12 @@ const _IDL = {
               defined: {
                 name: "GameState",
               },
+            },
+          },
+          {
+            name: "commitment_deadline",
+            type: {
+              option: "u64",
             },
           },
         ],

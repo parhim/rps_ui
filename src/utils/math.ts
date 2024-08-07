@@ -34,23 +34,3 @@ export function sampleData<T>(data: T[], sampleIntervalInHours = 1): T[] {
 
   return sampledData;
 }
-
-export const calculateExactWeights = (weights: { weight: string }[]) => {
-  let total = 0;
-  const distWeights = [] as number[];
-  // this makes sure we dont pass floats as arguments to add weights instruction
-  for (const [i, w] of weights.entries()) {
-    if (i === weights.length - 1) {
-      distWeights.push(U32_MAX - total);
-    } else {
-      const floored = new Decimal(U32_MAX)
-        .mul(w.weight)
-        .div(100)
-        .floor()
-        .toNumber();
-      distWeights.push(floored);
-      total += floored;
-    }
-  }
-  return distWeights;
-};

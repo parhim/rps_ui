@@ -10,16 +10,11 @@ import {
 import { Choice } from "../../hooks/game/useCommitChoice";
 
 export const useUpdateGameData = () =>
-  useRecoilTransaction_UNSTABLE<[string, GameAccount]>(
+  useRecoilTransaction_UNSTABLE<[string, GameAccount | null]>(
     ({ set }) =>
       (id, game) => {
-        console.log(101001);
         set(loadedGames, (l) => uniq([...l, id]));
-        console.log(999);
-        console.log({ id, game });
-
         set(gameAtomFamily(id), game);
-        console.log(2332);
         return;
       },
     []
