@@ -19,7 +19,7 @@ export const WalletConnectionProvider = ({
   const [network, , customRpc] = useDevnetState();
   const rpcEndpoint =
     network === NetworkOption.Devnet
-      ? import.meta.env.VITE_DEVNET_RPC_URL
+      ? "https://api.devnet.solana.com"
       : network === NetworkOption.Custom && customRpc.length
       ? customRpc
       : import.meta.env.VITE_MAINNET_RPC_URL;

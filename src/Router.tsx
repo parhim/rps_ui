@@ -29,6 +29,7 @@ export const Router = () => {
               <Route path="/*" Component={NotFound} />
             </Switch>
           </div>
+          <p className="mt-56 text-center text-xs">only available in devnet</p>
         </div>
         <WalletModal />
         <TransactionToastWindow />

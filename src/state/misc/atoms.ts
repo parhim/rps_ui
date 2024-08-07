@@ -9,7 +9,7 @@ const {
 
 export const networkAtom = atom<NetworkOption>({
   key: "networkAtom",
-  default: 0,
+  default: 1,
   effects: [persistAtom],
 });
 
